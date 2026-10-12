@@ -1,0 +1,13 @@
+# Backup files
+*.bak
+*~
+*.orig
+*.swp
+
+# IDE settings
+.idea/
+.vscode/
+
+# Python caches
+__pycache__/
+*.py[cod]
