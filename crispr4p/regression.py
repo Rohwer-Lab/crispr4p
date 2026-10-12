@@ -1,11 +1,11 @@
-#!/usr/local/bin/python
+#!/usr/bin/env python
 
 import datetime
 import os
 import time
 starttime = time.time()
 
-from .crispr4p import PRECOMPUTED, AnnotationParser, PrimerDesign, \
+from crispr4p import PRECOMPUTED, AnnotationParser, PrimerDesign, \
     COORDINATES, SYNONIMS, FASTA
 
 
