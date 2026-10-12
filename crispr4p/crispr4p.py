@@ -5,7 +5,7 @@ import re
 import os
 import sys
 import time
-import cPickle
+import pickle
 import multiprocessing
 
 from primer3 import bindings as primer3
@@ -28,8 +28,8 @@ def timeit(method):
         result = method(*args, **kw)
         te = time.time()
 
-        print '%r (%r, %r) %2.2f sec' % \
-              (method.__name__, args, kw, te-ts)
+        print('%r (%r, %r) %2.2f sec' % \
+              (method.__name__, args, kw, te-ts))
         return result
 
     return timed
@@ -55,7 +55,7 @@ class TableSorting:
         :param tup2:
         :return:
         '''
-        iterRange = range(self.posList[0], self.posList[1]+1)
+        iterRange = list(range(self.posList[0], self.posList[1]+1))
         iterRange = reversed(iterRange) if self.reversed else iterRange
 
         for i in iterRange:
@@ -180,7 +180,7 @@ class PrimerDesign:
             return self.argsList_.chromosome, start, end, '1'
 
         #print help and exit
-        print self.argp_.print_help()
+        print(self.argp_.print_help())
         sys.exit()
 
     def checkCoords_(self, chromosome, start, end):
@@ -204,7 +204,7 @@ class PrimerDesign:
     def _getUserNGGs(self, crFasta, start, end):
         ##user input NGGs
         findNGGs = {}
-        for strand, data in {1:crFasta.sequence[start:end+1], -1:self.reverseComplement(crFasta.sequence[start:end+1])}.iteritems():
+        for strand, data in {1:crFasta.sequence[start:end+1], -1:self.reverseComplement(crFasta.sequence[start:end+1])}.items():
             for match in re.finditer('GG', data):
                 pos = match.start()
                 pam = data[pos-1:pos+2]
@@ -215,7 +215,7 @@ class PrimerDesign:
                     findNGGs[seed] = auxfindNGGs
 
         #filter unique values
-        self.userNGGs = [value[0] for value in findNGGs.values() if len(value) == 1]
+        self.userNGGs = [value[0] for value in list(findNGGs.values()) if len(value) == 1]
 
         assert len(findNGGs) != 0, 'No nGG found in your input'
 
@@ -274,7 +274,7 @@ class PrimerDesign:
 
         #create table
         tablepos = []
-        for key, value in self.tableNGGs.iteritems():
+        for key, value in self.tableNGGs.items():
             newrow = [key.seed, key.primer] + [len(value[ind])for ind in range(8,21,2)]
             tablepos.append(newrow)
 
@@ -289,8 +289,8 @@ class PrimerDesign:
         :return:
         '''
         self.NGGs = {}
-        for name, sequence in self.chromosomesData.iteritems():
-            for strand, data in {1:sequence.sequence, -1:self.reverseComplement(sequence.sequence)}.iteritems():
+        for name, sequence in self.chromosomesData.items():
+            for strand, data in {1:sequence.sequence, -1:self.reverseComplement(sequence.sequence)}.items():
                 for pam in ('GG', 'AG'):
                     for match in re.finditer(pam, data):
                         pos = match.start()
@@ -307,7 +307,7 @@ class PrimerDesign:
     def genomeCompare(g1, g2, nmismatch):
         if nmismatch == 0:
             return g1 == g2
-        oo = len(filter(lambda x: g1[x] != g2[x], range(len(g1))))
+        oo = len([x for x in range(len(g1)) if g1[x] != g2[x]])
         return nmismatch >= oo
 
     def _gRNA_Table_Worker(self, readDataQueue, storeDataQueue, nMismatch):
@@ -368,7 +368,7 @@ class PrimerDesign:
             #collect data
             for x in range(len(self.userNGGs)):
                 if self.verbose:
-                    print 'Generating NGG table:', x*100/len(self.userNGGs), '%'
+                    print('Generating NGG table:', x*100/len(self.userNGGs), '%')
                 key, value = storeData.get()
                 self.tableNGGs[key] = value
 
@@ -382,7 +382,7 @@ class PrimerDesign:
 
             for x in range(len(self.userNGGs)):
                 if self.verbose:
-                    print 'Generating NGG table:', x * 100 / len(self.userNGGs), '%'
+                    print('Generating NGG table:', x * 100 / len(self.userNGGs), '%')
                 key, value = self._single_table_worker(self.userNGGs[x], nMismatch)
                 self.tableNGGs[key] = value
 
@@ -421,7 +421,7 @@ class PrimerDesign:
         'SEQUENCE_ID': 'MH1000',
         'SEQUENCE_TEMPLATE': prev+next,
         'SEQUENCE_INCLUDED_REGION': [0,2*width],
-        'SEQUENCE_EXCLUDED_REGION': [width-80, 160]
+        'SEQUENCE_EXCLUDED_REGION': [[width-80, 160]]
         }
         primerDict2 = {
         'PRIMER_OPT_SIZE': 20,
@@ -490,7 +490,7 @@ class PrimerDesign:
             tablePos_grna, hr_dna, primercheck, gRNAs_match = self.run_(chromosome, int(start), int(end), nMismatch, name)
 
             try:
-                data = cPickle.dumps((tablePos_grna, hr_dna, primercheck, gRNAs_match), protocol=-1)
+                data = pickle.dumps((tablePos_grna, hr_dna, primercheck, gRNAs_match), protocol=-1)
                 with open(precomputedName, 'w') as fh:
                     fh.write(data)
             except:
@@ -500,7 +500,7 @@ class PrimerDesign:
         else:
             try:
                 with open(precomputedName) as fh:
-                    tablePos_grna, hr_dna, primercheck, gRNAs_match = cPickle.load(fh)
+                    tablePos_grna, hr_dna, primercheck, gRNAs_match = pickle.load(fh)
             except:
                 # pickle loading failed delete file, next call will store it right.
                 os.remove(precomputedName)
@@ -525,7 +525,7 @@ class PrimerDesign:
         for ind, elem in enumerate(tablePos_grna):
 
             #prints the position of the table and occurrences tuple
-            print ind+1, '-', elem[0], tablePos_grna[ind][2:]
+            print(ind+1, '-', elem[0], tablePos_grna[ind][2:])
 
             #prints grna report
             self.gRNA_report(elem[1])
@@ -536,21 +536,21 @@ class PrimerDesign:
 
 
     def gRNA_report(self, gRNA, ):
-        print 'gRNA: ', gRNA[0], 'PAM: %d - %d' % gRNA[3], gRNA[5], gRNA[4]
-        print 'gRNAfw: ', gRNA[1]
-        print 'gRNArv: ', gRNA[2], '\n'
+        print('gRNA: ', gRNA[0], 'PAM: %d - %d' % gRNA[3], gRNA[5], gRNA[4])
+        print('gRNAfw: ', gRNA[1])
+        print('gRNArv: ', gRNA[2], '\n')
 
     def HR_DNA_report(self, hr_dna):
-        print 'HRfw: ', hr_dna[0]
-        print 'HRrv: ', hr_dna[1]
-        print 'Deleted DNA: ', hr_dna[2], '\n'
+        print('HRfw: ', hr_dna[0])
+        print('HRrv: ', hr_dna[1])
+        print('Deleted DNA: ', hr_dna[2], '\n')
 
     def CheckingPrimers_report(self, primerDesigns):
         pm = primerDesigns[0]
-        print 'Check primer left: ', pm['PRIMER_LEFT_0_SEQUENCE'], 'TM:', pm['PRIMER_LEFT_0_TM']
-        print 'Check primer right: ', pm['PRIMER_RIGHT_0_SEQUENCE'], 'TM:', pm['PRIMER_RIGHT_0_TM']
-        print 'Deleted DNA product size: ', pm['PRIMER_PAIR_0_PRODUCT_SIZE']
-        print 'Negative result product size: ', pm['negative_result'], '\n'
+        print('Check primer left: ', pm['PRIMER_LEFT_0_SEQUENCE'], 'TM:', pm['PRIMER_LEFT_0_TM'])
+        print('Check primer right: ', pm['PRIMER_RIGHT_0_SEQUENCE'], 'TM:', pm['PRIMER_RIGHT_0_TM'])
+        print('Deleted DNA product size: ', pm['PRIMER_PAIR_0_PRODUCT_SIZE'])
+        print('Negative result product size: ', pm['negative_result'], '\n')
 
     def runWeb(self, name=None, cr=None, 
             start=None, end=None, strand=None, nMismatch=0):
@@ -599,4 +599,4 @@ if __name__ == "__main__":
     pd = PrimerDesign(FASTA, COORDINATES, SYNONIMS, verbose=True)
     pd.runCL(sys.argv[1:])
 
-    print 'run time', time.time()-starttime
+    print('run time', time.time()-starttime)

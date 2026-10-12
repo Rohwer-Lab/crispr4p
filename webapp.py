@@ -23,7 +23,7 @@ class viewForm(object):
                 template_file = fh.read()
             return template_file
         except IOError as err:
-            print err
+            print(err)
 
 
 class PrimerDesignModel(object):
@@ -44,7 +44,7 @@ class PrimerDesignModel(object):
         try:
             self.tablePos_grna, self.hr_dna, self.primercheck, self.name, self.cr, self.start, self.end = pd.runWeb(self.name, self.cr, self.start, self.end, nMismatch=0)
         except AssertionError as err:
-            print "Error: ", err
+            print("Error: ", err)
 
     def result_html(self):
         pm = self.primercheck[0] if self.primercheck else {}
@@ -79,22 +79,22 @@ class controller(object):
         coordinate_form_names = ["coor_upper", "coor_lower", "chromosome"]
         get_form_val = lambda x: str(self.form.getvalue(x))
 
-        if self.form.has_key("action"):
-            if self.form.has_key("name"):
+        if "action" in self.form:
+            if "name" in self.form:
                 return [get_form_val("name"), None, None, None]
-            elif all(j==True for j in [self.form.has_key(i) for i in coordinate_form_names]):
+            elif all(j==True for j in [i in self.form for i in coordinate_form_names]):
                 return [None, get_form_val("chromosome"),
                         get_form_val("coor_lower"),
                         get_form_val("coor_upper")]
             else:
-                print '<font color="red"> Error: neither inputs of name mode nor\
-                        coordinate mode is complete</font>' # for web user
+                print('<font color="red"> Error: neither inputs of name mode nor\
+                        coordinate mode is complete</font>') # for web user
                 raise ValueError("neither inputs of name mode nor coordinate\
                         mode is complete.")
         else: return None
 
     def is_render(self):
-        if self.form.has_key("render"): return True
+        if "render" in self.form: return True
         else: return False
 
 
@@ -118,7 +118,7 @@ def webrun():
     temp = init_form()
     model = controller()
     ans = model.run_model()
-    print temp % ans
+    print(temp % ans)
 
 
 webrun()
